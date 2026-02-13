@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  participants Participant[]
+  singers      Singer[]
+  votes        Vote[]
+}
+
+model Participant {
+  id        String   @id @default(cuid())
+  roomId    String
+  name      String
+  createdAt DateTime @default(now())
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+
+  @@index([roomId])
+  @@unique([roomId, name])
+}
+
+model Singer {
+  id        String   @id @default(cuid())
+  roomId    String?
+  name      String
+  songTitle String
+  order     Int
+  room      Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+
+  @@index([roomId])
+}
+
+model Vote {
+  id            String       @id @default(cuid())
+  roomId         String
+  participantId  String
+  singerId       String
+  look           Int?
+  performance    Int?
+  song           Int?
+  updatedAt      DateTime     @updatedAt
+  room           Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant    Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  singer         Singer       @relation(fields: [singerId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, participantId, singerId])
+  @@index([roomId])
+}
